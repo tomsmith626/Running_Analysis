@@ -6,48 +6,46 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
 
-xrh = []
-yrh = []
-zrh = []
-rh = []
-
-xrk = np.array([])
-yrk = np.array([])
-zrk = np.array([])
-
-xlh = np.array([])
-ylh = np.array([])
-zlh = np.array([])
-
-xlk = np.array([])
-ylk = np.array([])
-zlk = np.array([])
-
-xra = np.array([])
-yra = np.array([])
-zra = np.array([])
-
-xla = np.array([])
-yla = np.array([])
-zla = np.array([])
-
-xls = np.array([])
-yls = np.array([])
-zls = np.array([])
-
-yrs = np.array([])
-xrs = np.array([])
-zrs = np.array([])
-
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_holistic = mp.solutions.holistic
 
+# hip, knee, ankle, shoulder, wrist, heel, footindex
+coordinates = [[],[],[],[],[],[],[],[],[],[],[],[],[],[]]
+coordinate_names = ["RIGHT_HIP", "LEFT_HIP","RIGHT_KNEE", "LEFT_KNEE", "RIGHT_ANKLE", "LEFT_ANKLE","RIGHT_SHOULDER", "LEFT_SHOULDER",
+                    "RIGHT_WRIST", "LEFT_WRIST", "RIGHT_HEEL", "LEFT_HEEL","RIGHT_FOOT_INDEX","LEFT_FOOT_INDEX"]
+
+def get_joint_coords(results, coordinates, coordinate_names):
+    for i, joint in enumerate(coordinate_names):
+        # feel like the below line could easily be shortened, I'm calling the reults for one thing three times
+        coordinates[i].append(np.array([results.pose_landmarks.landmark[getattr(mp_holistic.PoseLandmark,joint)].x,results.pose_landmarks.landmark[getattr(mp_holistic.PoseLandmark,joint)].y,results.pose_landmarks.landmark[getattr(mp_holistic.PoseLandmark,joint)].z]))
+    return coordinates
+
 def iterate_frames(num, data):
+    """
+    This function is used in the animation to produce the graphs in each frame.
+    num is the frame number we are on
+    data is a list of lists of np.arrays - each sub-list is a joint and each np.array is the position of that joint at a given frame
+    """
 
     for artist in plt.gca().lines + plt.gca().collections:
         artist.remove()
-    points = ax.scatter(data[num][0],data[num][1],data[num][2])
+    
+    for i, joint in enumerate(data):
+        if i == 6 or i == 7:
+            points = ax.scatter(joint[num][0],joint[num][1],joint[num][2],c="red")
+        else:
+            points = ax.scatter(joint[num][0],joint[num][1],joint[num][2],c="blue")
+        
+    #trying to plot lines between joints that need lines
+    points = ax.plot3D(np.array([data[0][num][0],data[1][num][0]]),np.array([data[0][num][1],data[1][num][1]]),np.array([data[0][num][2],data[1][num][2]]))
+    points = ax.plot3D(np.array([data[0][num][0],data[2][num][0]]),np.array([data[0][num][1],data[2][num][1]]),np.array([data[0][num][2],data[2][num][2]]))
+    points = ax.plot3D(np.array([data[1][num][0],data[3][num][0]]),np.array([data[1][num][1],data[3][num][1]]),np.array([data[1][num][2],data[3][num][2]]))
+    points = ax.plot3D(np.array([data[2][num][0],data[4][num][0]]),np.array([data[2][num][1],data[4][num][1]]),np.array([data[2][num][2],data[4][num][2]]))
+    points = ax.plot3D(np.array([data[6][num][0],data[7][num][0]]),np.array([data[6][num][1],data[7][num][1]]),np.array([data[6][num][2],data[7][num][2]]))
+    points = ax.plot3D(np.array([data[6][num][0],data[0][num][0]]),np.array([data[6][num][1],data[0][num][1]]),np.array([data[6][num][2],data[0][num][2]]))
+    points = ax.plot3D(np.array([data[7][num][0],data[1][num][0]]),np.array([data[7][num][1],data[1][num][1]]),np.array([data[7][num][2],data[1][num][2]]))
+
 
     return points
 
@@ -77,15 +75,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.1, min_tracking_confidence=
             frame.flags.writeable = True
             frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
             frame = cv.resize(frame, (800, 800))
-            '''
-            mp_drawing.draw_landmarks(
-                frame,
-                results.face_landmarks,
-                mp_holistic.FACEMESH_CONTOURS,
-                landmark_drawing_spec=None,
-                connection_drawing_spec=mp_drawing_styles
-                .get_default_face_mesh_contours_style())
-            '''
+
             mp_drawing.draw_landmarks(
                 frame,
                 results.pose_landmarks,
@@ -93,13 +83,10 @@ with mp_holistic.Holistic(min_detection_confidence=0.1, min_tracking_confidence=
                 landmark_drawing_spec=mp_drawing_styles
                 .get_default_pose_landmarks_style())
             
-            rh.append(np.array([results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_HIP].x,results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_HIP].y,results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_HIP].z]))
-            xrh.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_HIP].x)
-            yrh.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_HIP].y)
-            zrh.append(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_HIP].z)
+            coordinates = get_joint_coords(results, coordinates,coordinate_names)
 
             # show the frame
-           # cv.imshow('Running with markers. Press \'Q\' to exit.', frame)
+            cv.imshow('Running with markers. Press \'Q\' to exit.', frame)
             
         # Press Q on keyboard to exit 
             if cv.waitKey(25) & 0xFF == ord('q'): 
@@ -117,29 +104,36 @@ cap.release()
 cv.destroyAllWindows() 
 
 
-
-print(rh,type(rh))
-
 # Attaching 3D axis to the figure
 fig = plt.figure()
 ax = p3.Axes3D(fig)
 
-# Setting the axes properties
-ax.set_xlim3d([0.0, 1.0])
+# Setting the axes properties - this should probably be calculated from max & min values from opencv data
+ax.set_xlim3d([-1, 1])
 ax.set_xlabel('X')
 
-ax.set_ylim3d([0.0, 1.0])
+ax.set_ylim3d([-1, 1])
 ax.set_ylabel('Y')
 
-ax.set_zlim3d([0.0, 1.0])
+ax.set_zlim3d([-1, 1])
 ax.set_zlabel('Z')
 
 ax.set_title('3D Visualisation')
 
-# Creating the Animation object
-line_ani = animation.FuncAnimation(fig, iterate_frames, frames=len(rh), fargs=([rh]))
+"""
+Creating the Animation object. my understanding:
+frames = number of frames before the thing repeats itself
+fargs = the arguments that are sent to the function that returns the next image to animate (frame is also sent which just equals the number frame we are on) 
+        currently only sending rh data.
+"""
+line_ani = animation.FuncAnimation(fig, iterate_frames, frames=len(coordinates[0]), fargs=([coordinates]))
 
 plt.show()
+
+# saving to m4 using ffmpeg writer 
+writervideo = animation.FFMpegWriter(fps=60) 
+line_ani.save('increasingStraightLine.mp4', writer=writervideo) 
+plt.close() 
 
 """
 viewer = napari.Viewer()

@@ -8,7 +8,9 @@ def iterate_frames(num, data):
 
     for artist in plt.gca().lines + plt.gca().collections:
         artist.remove()
-    points = ax.scatter(data[num][0],data[num][1],data[num][2])
+    for i in data:
+        points = ax.scatter(i[num][0],i[num][1],i[num][2])
+    
 
     return points
 
@@ -18,6 +20,7 @@ ax = p3.Axes3D(fig)
 
 
 data = [np.array([0.5,0.5,0.5]),np.array([0.4,0.4,0.4]),np.array([0.3,0.3,0.3]),np.array([0.2,0.2,0.2])]
+data2 = [np.array([0.5,0.5,0.3]),np.array([0.4,0.4,0.2]),np.array([0.3,0.3,0.1]),np.array([0.2,0.2,0.0])]
 
 points = [ax.scatter(dat[0], dat[1], dat[2]) for dat in data]
 
@@ -36,6 +39,6 @@ ax.set_zlabel('Z')
 ax.set_title('3D Test')
 
 # Creating the Animation object
-line_ani = animation.FuncAnimation(fig, iterate_frames, frames=4, fargs=([data]))
+line_ani = animation.FuncAnimation(fig, iterate_frames, frames=4, fargs=([[data,data2]]))
 
 plt.show()
