@@ -1,7 +1,6 @@
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
-import napari
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
@@ -134,13 +133,3 @@ plt.show()
 writervideo = animation.FFMpegWriter(fps=60) 
 line_ani.save('increasingStraightLine.mp4', writer=writervideo) 
 plt.close() 
-
-"""
-viewer = napari.Viewer()
-for frame in landmarks:
-    viewer.add_image(frame)
-
-viewer.layers[0].rendering = 'mip' # Maximum Intensity Projection (MIP)
-viewer.dims.ndisplay = 3
-napari.run()
-"""
